@@ -1,57 +1,107 @@
 import ejs from "ejs";
-import { getContext, helpers, Property } from "@dylibso/xtp-bindgen";
+import { getContext, helpers, Import, Export, Property, Schema, XtpSchema } from "@dylibso/xtp-bindgen";
 
-function toGolangType(property: Property): string {
+function toPascalCase(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function needsDocumentation(x: Export | Import) {
+  if (x.description) return true;
+  if (x.input && x.input.description) return true;
+  if (x.output && x.output.description) return true;
+  return false;
+}
+
+function serializableTypes(schema: XtpSchema): string[] {
+  const hash : Map<string, boolean> = new Map();
+
+  for (const s of Object.values(schema.schemas)) {
+    hash.set(toCSharpType({ $ref: s } as Property), true);
+  }
+
+  for (const e of Object.values(schema.exports)) {
+    if (e.input) {
+      hash.set(toCSharpType((e.input as any) as Property), true);
+    }
+
+    if (e.output) {
+      hash.set(toCSharpType((e.output as any) as Property), true);
+    }
+  }
+
+  for (const i of Object.values(schema.imports)) {
+    if (i.input) {
+      hash.set(toCSharpType((i.input as any) as Property), true);
+    }
+
+    if (i.output) {
+      hash.set(toCSharpType((i.output as any) as Property), true);
+    }
+  }
+
+  return Array.from(hash.keys());
+}
+
+function toCSharpType(property: Property): string {
   if (property.$ref) return property.$ref.name;
   switch (property.type) {
     case "string":
       if (property.format === "date-time") {
-        return "time.Time";
+        return "DateTime";
       }
-      return "string";
+      return "String";
     case "number":
       if (property.format === "float") {
-        return "float32";
+        return "Single";
       }
       if (property.format === "double") {
-        return "float64";
+        return "Double";
       }
-      return "int64";
+      return "long";
     case "integer":
-      return "int32";
+      return "Int32";
     case "boolean":
-      return "bool";
+      return "Boolean";
     case "object":
-      return "map[string]interface{}";
+      return "Object";
     case "array":
-      if (!property.items) return "[]any";
+      if (!property.items) return "Object[]";
       // TODO this is not quite right to force cast
-      return `[]${toGolangType(property.items as Property)}`;
+      return `${toCSharpType(property.items as Property)}[]`;
     case "buffer":
-      return "[]byte";
+      return "byte[]";
     default:
-      throw new Error("Can't convert property to Go type: " + property.type);
+      throw new Error("Can't convert property to C# type: " + property.type + " of " + property.name);
   }
 }
 
-function pointerToGolangType(property: Property) {
-  const typ = toGolangType(property);
+function needsTypeInfo(property: Property): boolean {
+  return true;
+  // if (property.$ref) return true;
 
-  if (typ.startsWith("[]") || typ.startsWith("map[")) {
-    return typ;
-  }
+  // if (property.type === "array") {
+  //   return needsTypeInfo(property.items as Property);
+  // }
 
-  return `*${typ}`;
+  // return false;
 }
 
-function makePublic(s: string) {
-  const cap = s.charAt(0).toUpperCase();
-  if (s.charAt(0) === cap) {
-    return s;
+function typeInfo(property: Property): string {
+  if (property.$ref) {
+    return toCSharpType(property);
   }
 
-  const pub = cap + s.slice(1);
-  return pub;
+  if (property.type === "array") {
+    return typeInfo(property.items as Property) + "Array";
+  }
+
+  return toCSharpType(property);
+
+}
+
+function isEnum(schema: Schema): boolean {
+  if (!schema.enum) return false;
+  return schema.enum.length > 0;
 }
 
 export function render() {
@@ -59,11 +109,17 @@ export function render() {
   const ctx = {
     ...helpers,
     ...getContext(),
-    toGolangType,
-    pointerToGolangType,
-    makePublic,
+    toCSharpType,
+    needsTypeInfo,
+    isEnum,
+    typeInfo,
+    serializableTypes,
+    needsDocumentation,
+    toPascalCase,
   };
 
-  const output = ejs.render(tmpl, ctx);
+  const output = ejs.render(tmpl, ctx, {
+    rmWhitespace: true,
+  });
   Host.outputString(output);
 }

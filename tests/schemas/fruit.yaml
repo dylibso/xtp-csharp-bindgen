@@ -3,9 +3,9 @@ exports:
     description: "This demonstrates how you can create an export with\nno inputs or
       outputs. \n"
     codeSamples:
-    - lang: typescript
+    - lang: csharp
       source: |
-        console.log(''Hello World!'')
+        System.Console.WriteLine("Hello World!");
   topLevelPrimitives:
     description: |
       This demonstrates how you can accept or return primtive types.

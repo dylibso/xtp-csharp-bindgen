@@ -1,17 +1,18 @@
 app_id = "<%= project.appId %>"
 
-# This is where 'xtp plugin push' expects to find the wasm file after the build script has run.
-bin = "dist/plugin.wasm"
+# This is where 'xtp plugin push' expects to find the DLL file after the build script has run.
+bin = "dist/Plugin.wasm"
 extension_point_id = "<%= project.extensionPointId %>"
 # This is the 'binding' name used for the plugin.
 name = "<%= project.name %>"
 
 [scripts]
-# xtp plugin build runs this script to generate the wasm file
-build = "mkdir -p dist && tinygo build -target wasi -o dist/plugin.wasm ."
+# xtp plugin build runs this script to generate the DLL file
+build = "mkdir dist && dotnet publish -c Release -o dist"
 
 # xtp plugin init runs this script to format the code
-format = "go fmt"
+# format = "dotnet format && dotnet remove package StyleCop.Analyzers && rm stylecop.json"
+format = "dotnet format"
 
 # xtp plugin init runs this script before running the format script
-prepare = "go get ./..."
+prepare = "dotnet restore"

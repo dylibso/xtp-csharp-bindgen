@@ -1,0 +1,37 @@
+namespace <%= project.name %>;
+using System;
+using Extism;
+
+public class Program
+{
+    public static void Main()
+    {
+        // Note: a `Main` method is required for the app to compile
+    }
+
+	<% schema.exports.forEach(ex => { %>
+		<% if (needsDocumentation(ex)) { %>
+			/// <summary> <% -%>
+			<% ex.description.split('\n').filter(line => line.trim() !== "").forEach(line => { %>
+				/// <%= line.trim() -%>
+			<% }) %>
+			/// </summary>
+			<% if (ex.input && ex.input.description) { -%>
+			/// <param name="input"><%= ex.input.description %></param>
+			<% } -%>
+			<% if (ex.output && ex.output.description) { -%>
+			/// <returns><%= ex.output.description %></returns>
+			<% } %>
+		<% } %>
+		public static <%= ex.output ? toCSharpType(ex.output) : "void" %> <%= toPascalCase(ex.name) %>(<%= ex.input ? `${toCSharpType(ex.input)} input` : "" %>)
+		{
+			<% if (featureFlags['stub-with-code-samples'] && codeSamples(ex, 'csharp').length > 0) { -%>
+				<%- codeSamples(ex, 'csharp')[0].source %>
+			<% } else { -%>
+				// TODO: fill out your implementation here
+				throw new NotImplementedException();
+			<% } -%>
+		}
+	<% }) %>
+	
+}
