@@ -18,29 +18,33 @@ jobs:
           sh install.sh
           curl https://static.dylibso.com/cli/install.sh | sh
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '21'
-
-      - name: Install
-        run: |
-          npm ci
-
-      - name: Build
-        run: |
-          npm run build
-
-      - name: Install TinyGo
-        uses: acifani/setup-tinygo@v1.1.0
-        with:
-          tinygo-version: 0.31.2
-          binaryen-version: "116"
-          
-
       - name: Run test script
         run: |
-          cd tests && ./test.sh
+          make
+
+      - name: Install WASI SDK
+        run: |
+          mkdir ~/wasi-sdk
+          cd ~/wasi-sdk/
+          export WASI_VERSION=20
+          export WASI_VERSION_FULL=${WASI_VERSION}.0
+          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_VERSION}/wasi-sdk-${WASI_VERSION_FULL}-linux.tar.gz
+          tar xvf wasi-sdk-${WASI_VERSION_FULL}-linux.tar.gz
+
+      - name: Setup Extism and XTP
+        run: |
+          curl -O https://raw.githubusercontent.com/extism/js-pdk/main/install.sh
+          sh install.sh
+          curl https://static.dylibso.com/cli/install.sh | sh
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3.0.3
+        with:
+            dotnet-version: 8
+
+      - name: Install WASI workload
+        run: |
+          dotnet workload install wasi-experimental
 
       - name: Run Bindgen Test
         run: |
