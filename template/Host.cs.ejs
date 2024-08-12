@@ -17,6 +17,9 @@ public class Host
                 <% if (ex.input.contentType === 'application/json') { %>
                     Pdk.Log(LogLevel.Debug, "<%= ex.name %>: getting JSON input");
                     var input = Pdk.GetInputJson(PdkJsonContext.Instance.<%= typeInfo(ex.input) %>);
+                <% } else if (ex.input.$ref && ex.input.$ref.enum) { %>
+                    var str = Pdk.GetInputString();
+                    var input = Enum.TryParse< <%= toCSharpType(ex.input) %> >(str, out var value) ? value : throw new Exception($"Could not parse '{str}' into a <%= toCSharpType(ex.input) %>");
                 <% } else if (ex.input.type === 'string') { %>
                     Pdk.Log(LogLevel.Debug, "<%= ex.name %>: getting string input");
                     var input = Pdk.GetInputString();
