@@ -63,9 +63,9 @@ function toCSharpType(property: Property): string {
     case "boolean":
       return "Boolean";
     case "object":
-      return "Object";
+      return "JsonNode";
     case "array":
-      if (!property.items) return "Object[]";
+      if (!property.items) return "JsonArray";
       // TODO this is not quite right to force cast
       return `${toCSharpType(property.items as Property)}[]`;
     case "buffer":
