@@ -11,7 +11,7 @@ jobs:
     env:
       WASI_VERSION: "20"
       WASI_VERSION_FULL: "20.0"
-      WASI_SDK_PATH: "~/wasi-sdk/wasi-sdk-20.0"
+      WASI_SDK_PATH: "/home/runner/wasi-sdk/wasi-sdk-20.0"
       
     steps:
       - name: Checkout repository
