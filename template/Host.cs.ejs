@@ -3,9 +3,10 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Nodes;
 using Extism;
 
-public class GeneratedPdk
+public class Host
 {
     <% schema.exports.forEach(ex => { %>
     [UnmanagedCallersOnly(EntryPoint = "<%= ex.name %>")]
@@ -17,12 +18,15 @@ public class GeneratedPdk
                 <% if (ex.input.contentType === 'application/json') { %>
                     Pdk.Log(LogLevel.Debug, "<%= ex.name %>: getting JSON input");
                     var input = Pdk.GetInputJson(PdkJsonContext.Instance.<%= typeInfo(ex.input) %>);
+                <% } else if (ex.input.$ref && ex.input.$ref.enum) { %>
+                    var str = Pdk.GetInputString();
+                    var input = Enum.TryParse< <%= toCSharpType(ex.input) %> >(str, out var value) ? value : throw new Exception($"Could not parse '{str}' into a <%= toCSharpType(ex.input) %>");
                 <% } else if (ex.input.type === 'string') { %>
                     Pdk.Log(LogLevel.Debug, "<%= ex.name %>: getting string input");
                     var input = Pdk.GetInputString();
                 <% } else { %>
                     Pdk.Log(LogLevel.Debug, "<%= ex.name %>: getting bytes input");
-                    var input = Pdk.Input();
+                    var input = Pdk.GetInput();
                 <% } %>
 
                 Pdk.Log(LogLevel.Debug, "<%= ex.name %>: calling implementation function");
@@ -45,10 +49,10 @@ public class GeneratedPdk
                     Pdk.SetOutputJson(output, PdkJsonContext.Instance.<%= typeInfo(ex.output) %>);
                 <% } else if (ex.output.type === 'string') { %>
                     Pdk.Log(LogLevel.Debug, "<%= ex.name %>: setting string output");
-                    Pdk.OutputString(output);
+                    Pdk.SetOutput(output);
                 <% } else { %>
                     Pdk.Log(LogLevel.Debug, "<%= ex.name %>: setting bytes output");
-                    Pdk.Output(output);
+                    Pdk.SetOutput(output);
                 <% } %>
             <% } %>
 
@@ -106,8 +110,8 @@ public class GeneratedPdk
 
         <% if (imp.output) { %>
             <% if (imp.output.contentType === 'application/json') { %>
-                var json = MemoryBlock.Find(offs).ReadBytes();
-                return JsonSerializer.Deserialize<<%= toCSharpType(imp.output) %>>(json, PdkJsonContext.Instance.<%= typeInfo(imp.output) %>);
+                var outputJson = MemoryBlock.Find(offs).ReadBytes();
+                return JsonSerializer.Deserialize(outputJson, PdkJsonContext.Instance.<%= typeInfo(imp.output) %>);
             <% } else if (imp.output.contentType === 'text/plain; charset=UTF-8' || imp.output.type === 'string') { %>
                 return MemoryBlock.Find(offs).ReadString();
             <% } else { %>

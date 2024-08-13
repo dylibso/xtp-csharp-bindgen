@@ -1,7 +1,7 @@
 test: bundle
-	powershell ./tests/test.ps1
+	pwsh ./tests/test.ps1
 
 bundle:
-	powershell ./bundle.ps1
+	pwsh ./bundle.ps1
 
 .PHONY: bundle test

@@ -8,6 +8,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      WASI_VERSION: "20"
+      WASI_VERSION_FULL: "20.0"
+      WASI_SDK_PATH: "/home/runner/wasi-sdk/wasi-sdk-20.0"
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -31,16 +36,32 @@ jobs:
         run: |
           npm run build
 
-      - name: Install TinyGo
-        uses: acifani/setup-tinygo@v1.1.0
-        with:
-          tinygo-version: 0.31.2
-          binaryen-version: "116"
-          
-
       - name: Run test script
         run: |
-          cd tests && ./test.sh
+          make
+
+      - name: Install WASI SDK
+        run: |
+          mkdir ~/wasi-sdk
+          cd ~/wasi-sdk/
+          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_VERSION}/wasi-sdk-${WASI_VERSION_FULL}-linux.tar.gz
+          tar xvf wasi-sdk-${WASI_VERSION_FULL}-linux.tar.gz
+          ~/wasi-sdk/wasi-sdk-${WASI_VERSION_FULL}/bin/clang --version
+
+      - name: Setup Extism and XTP
+        run: |
+          curl -O https://raw.githubusercontent.com/extism/js-pdk/main/install.sh
+          sh install.sh
+          curl https://static.dylibso.com/cli/install.sh | sh
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v3.0.3
+        with:
+            dotnet-version: 8
+
+      - name: Install WASI workload
+        run: |
+          dotnet workload install wasi-experimental
 
       - name: Run Bindgen Test
         run: |
@@ -57,13 +78,18 @@ jobs:
             exit 1
           fi
 
+          echo "Downloading the bundle from $ASSET_URL"
+
           # download and unzip the bundle
           curl -L -o bundle.zip "$ASSET_URL"
           unzip bundle.zip
           cd bundle/
 
           # Using ../template-bundle so we test the head template
+          echo "Running xtp plugin init"
           xtp plugin init --schema-file schema.yaml --template ../template-bundle --path exampleplugin --name exampleplugin --feature stub-with-code-samples
-          xtp plugin build --path exampleplugin
+          echo "Running xtp plugin build"
+          script -q -c "xtp plugin build --path exampleplugin" /dev/stdout
+          echo "Running xtp plugin test"
           xtp plugin test exampleplugin/dist/plugin.wasm --with test.wasm --mock-host mock.wasm
 
