@@ -8,10 +8,10 @@ name = "<%= project.name %>"
 
 [scripts]
 # xtp plugin build runs this script to generate the DLL file
-build = "mkdir dist 2>nul || true && dotnet publish -c Release && cp bin/Release/wasi-wasm/AppBundle/Plugin.wasm dist/plugin.wasm"
+build = "mkdir dist 2>nul && dotnet publish -c Release && cp bin/Release/wasi-wasm/AppBundle/<%=project.name%>.wasm dist/plugin.wasm"
 
 # xtp plugin init runs this script to format the code
-format = "dotnet format"
+format = "dotnet format && mv Plugin.csproj <%=project.name%>.csproj 2>nul"
 
 # xtp plugin init runs this script before running the format script
 prepare = "dotnet restore"
