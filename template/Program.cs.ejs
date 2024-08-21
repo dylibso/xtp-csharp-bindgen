@@ -1,4 +1,4 @@
-namespace <%= project.name %>;
+namespace <%- project.name %>;
 using System;
 using Extism;
 
@@ -13,17 +13,17 @@ public class Program
 		<% if (needsDocumentation(ex)) { %>
 			/// <summary> <% -%>
 			<% ex.description.split('\n').filter(line => line.trim() !== "").forEach(line => { %>
-				/// <%= line.trim() -%>
+				/// <%- line.trim() -%>
 			<% }) %>
 			/// </summary>
 			<% if (ex.input && ex.input.description) { -%>
-			/// <param name="input"><%= ex.input.description %></param>
+			/// <param name="input"><%- ex.input.description %></param>
 			<% } -%>
 			<% if (ex.output && ex.output.description) { -%>
-			/// <returns><%= ex.output.description %></returns>
+			/// <returns><%- ex.output.description %></returns>
 			<% } %>
 		<% } %>
-		public static <%= ex.output ? toCSharpType(ex.output) : "void" %> <%= toPascalCase(ex.name) %>(<%= ex.input ? `${toCSharpType(ex.input)} input` : "" %>)
+		public static <%- ex.output ? toCSharpType(ex.output) : "void" %> <%- toPascalCase(ex.name) %>(<%- ex.input ? `${toCSharpType(ex.input)} input` : "" %>)
 		{
 			<% if (featureFlags['stub-with-code-samples'] && codeSamples(ex, 'csharp').length > 0) { -%>
 				<%- codeSamples(ex, 'csharp')[0].source %>

@@ -1,4 +1,4 @@
-namespace <%= project.name %>;
+namespace <%- project.name %>;
 using System;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -9,54 +9,54 @@ using Extism;
 public class Host
 {
     <% schema.exports.forEach(ex => { %>
-    [UnmanagedCallersOnly(EntryPoint = "<%= ex.name %>")]
-    public static int <%= ex.name %>()
+    [UnmanagedCallersOnly(EntryPoint = "<%- ex.name %>")]
+    public static int <%- ex.name %>()
     {
         try
         {
             <% if (ex.input) { %>
                 <% if (ex.input.contentType === 'application/json') { %>
-                    Pdk.Log(LogLevel.Debug, "<%= ex.name %>: getting JSON input");
-                    var input = Pdk.GetInputJson(PdkJsonContext.Instance.<%= typeInfo(ex.input) %>);
+                    Pdk.Log(LogLevel.Debug, "<%- ex.name %>: getting JSON input");
+                    var input = Pdk.GetInputJson(PdkJsonContext.Instance.<%- typeInfo(ex.input) %>);
                 <% } else if (ex.input.$ref && ex.input.$ref.enum) { %>
                     var str = Pdk.GetInputString();
-                    var input = Enum.TryParse< <%= toCSharpType(ex.input) %> >(str, out var value) ? value : throw new Exception($"Could not parse '{str}' into a <%= toCSharpType(ex.input) %>");
+                    var input = Enum.TryParse< <%- toCSharpType(ex.input) %> >(str, out var value) ? value : throw new Exception($"Could not parse '{str}' into a <%- toCSharpType(ex.input) %>");
                 <% } else if (ex.input.type === 'string') { %>
-                    Pdk.Log(LogLevel.Debug, "<%= ex.name %>: getting string input");
+                    Pdk.Log(LogLevel.Debug, "<%- ex.name %>: getting string input");
                     var input = Pdk.GetInputString();
                 <% } else { %>
-                    Pdk.Log(LogLevel.Debug, "<%= ex.name %>: getting bytes input");
+                    Pdk.Log(LogLevel.Debug, "<%- ex.name %>: getting bytes input");
                     var input = Pdk.GetInput();
                 <% } %>
 
-                Pdk.Log(LogLevel.Debug, "<%= ex.name %>: calling implementation function");
+                Pdk.Log(LogLevel.Debug, "<%- ex.name %>: calling implementation function");
                 <% if (ex.output) { %>
-                    var output = Program.<%= toPascalCase(ex.name) %>(input);
+                    var output = Program.<%- toPascalCase(ex.name) %>(input);
                 <% } else { %>
-                    Program.<%= toPascalCase(ex.name) %>(input);
+                    Program.<%- toPascalCase(ex.name) %>(input);
                 <% } %>
             <% } else { %>
                 <% if (ex.output) { %>
-                    var output = Program.<%= toPascalCase(ex.name) %>();
+                    var output = Program.<%- toPascalCase(ex.name) %>();
                 <% } else { %>
-                    Program.<%= toPascalCase(ex.name) %>();
+                    Program.<%- toPascalCase(ex.name) %>();
                 <% } %>
             <% } %>
 
             <% if (ex.output) { %>
                 <% if (ex.output.contentType === 'application/json') { %>
-                    Pdk.Log(LogLevel.Debug, "<%= ex.name %>: setting JSON output");
-                    Pdk.SetOutputJson(output, PdkJsonContext.Instance.<%= typeInfo(ex.output) %>);
+                    Pdk.Log(LogLevel.Debug, "<%- ex.name %>: setting JSON output");
+                    Pdk.SetOutputJson(output, PdkJsonContext.Instance.<%- typeInfo(ex.output) %>);
                 <% } else if (ex.output.type === 'string') { %>
-                    Pdk.Log(LogLevel.Debug, "<%= ex.name %>: setting string output");
+                    Pdk.Log(LogLevel.Debug, "<%- ex.name %>: setting string output");
                     Pdk.SetOutput(output);
                 <% } else { %>
-                    Pdk.Log(LogLevel.Debug, "<%= ex.name %>: setting bytes output");
+                    Pdk.Log(LogLevel.Debug, "<%- ex.name %>: setting bytes output");
                     Pdk.SetOutput(output);
                 <% } %>
             <% } %>
 
-            Pdk.Log(LogLevel.Debug, "<%= ex.name %>: returning");
+            Pdk.Log(LogLevel.Debug, "<%- ex.name %>: returning");
             return 0;
         }
         catch (Exception ex)
@@ -68,30 +68,30 @@ public class Host
     <% }) %>
 
     <% schema.imports.forEach(imp => { %>
-    [DllImport("extism", EntryPoint = "<%= imp.name %>")]
-    private static extern <%= imp.output ? "ulong" : "void" %> <%= imp.name %>Impl(<%= imp.input ? "ulong input" : "" %>);
+    [DllImport("extism", EntryPoint = "<%- imp.name %>")]
+    private static extern <%- imp.output ? "ulong" : "void" %> <%- imp.name %>Impl(<%- imp.input ? "ulong input" : "" %>);
 
     <% if (needsDocumentation(imp)) { %>
         /// <summary>  <% -%>
         <% imp.description.split('\n').filter(line => line.trim() !== "").forEach(line => { %>
-            /// <%= line.trim() -%>
+            /// <%- line.trim() -%>
         <% }) %>
         /// </summary>
         <% if (imp.input && imp.input.description) { -%>
-        /// <param name="input"><%= imp.input.description %></param>
+        /// <param name="input"><%- imp.input.description %></param>
         <% } -%>
         <% if (imp.output && imp.output.description) { -%>
-        /// <returns><%= imp.output.description %></returns>
+        /// <returns><%- imp.output.description %></returns>
         <% } %>
     <% } %>
-    public static <%= imp.output ? toCSharpType(imp.output) : "void" %> <%= toPascalCase(imp.name) %>(<%= imp.input ? `${toCSharpType(imp.input)} input` : "" %>)
+    public static <%- imp.output ? toCSharpType(imp.output) : "void" %> <%- toPascalCase(imp.name) %>(<%- imp.input ? `${toCSharpType(imp.input)} input` : "" %>)
     {
         <% if (imp.input) { %>
             <% if (imp.input.contentType === 'application/json') { %>
-                var json = JsonSerializer.Serialize(input, PdkJsonContext.Instance.<%= typeInfo(imp.input) %>);
+                var json = JsonSerializer.Serialize(input, PdkJsonContext.Instance.<%- typeInfo(imp.input) %>);
                 var mem = Pdk.Allocate(json);
             <% } else if (imp.input.$ref && imp.input.$ref.enum) { %>
-                var str = Enum.GetName(typeof(<%= toCSharpType(imp.input) %>), input);
+                var str = Enum.GetName(typeof(<%- toCSharpType(imp.input) %>), input);
                 var mem = Pdk.Allocate(str);
             <% } else if (imp.input.contentType === 'text/plain; charset=UTF-8' || imp.input.type === 'string') { %>
                 var mem = Pdk.Allocate(input);
@@ -100,18 +100,18 @@ public class Host
             <% } %>
 
             <% if (imp.output) { %>
-            var offs = <%= imp.name %>Impl(mem.Offset);
+            var offs = <%- imp.name %>Impl(mem.Offset);
             <% } else { %>
-            <%= imp.name %>Impl(mem.Offset);
+            <%- imp.name %>Impl(mem.Offset);
             <% } %>
         <% } else { %>
-            <% if (imp.output) { %>var offs = <% } %><%= imp.name %>Impl();
+            <% if (imp.output) { %>var offs = <% } %><%- imp.name %>Impl();
         <% } %>
 
         <% if (imp.output) { %>
             <% if (imp.output.contentType === 'application/json') { %>
                 var outputJson = MemoryBlock.Find(offs).ReadBytes();
-                return JsonSerializer.Deserialize(outputJson, PdkJsonContext.Instance.<%= typeInfo(imp.output) %>);
+                return JsonSerializer.Deserialize(outputJson, PdkJsonContext.Instance.<%- typeInfo(imp.output) %>);
             <% } else if (imp.output.contentType === 'text/plain; charset=UTF-8' || imp.output.type === 'string') { %>
                 return MemoryBlock.Find(offs).ReadString();
             <% } else { %>
@@ -124,25 +124,25 @@ public class Host
 
 <% Object.values(schema.schemas).forEach(s => { %>
     <% if (isEnum(s)) { %>
-        public enum <%= s.name %>
+        public enum <%- s.name %>
         {
             <% s.enum.forEach(v => { %>
-            <%= v %>,
+            <%- v %>,
             <% }) %>
         }
     <% } else { %>
-        public class <%= s.name %>
+        public class <%- s.name %>
         {
             <% Object.values(s.properties).forEach(p => { %>
-            [JsonPropertyName("<%= p.name %>")]
-            public <%= toCSharpType(p) %> <%= toPascalCase(p.name) %> { get; set; }
+            [JsonPropertyName("<%- p.name %>")]
+            public <%- toCSharpType(p) %> <%- toPascalCase(p.name) %> { get; set; }
             <% }) %>
         }
     <% } %>
 <% }) %>
 
 <% serializableTypes(schema).forEach(s => { %>
-    [JsonSerializable(typeof(<%= s %>))]
+    [JsonSerializable(typeof(<%- s %>))]
 <% }) %>
 public partial class PdkJsonContext : JsonSerializerContext
 {
