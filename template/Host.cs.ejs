@@ -74,14 +74,14 @@ public class Host
     <% if (needsDocumentation(imp)) { %>
         /// <summary>  <% -%>
         <% imp.description.split('\n').filter(line => line.trim() !== "").forEach(line => { %>
-            /// <%- line.trim() -%>
+            /// <%= line.trim() -%>
         <% }) %>
         /// </summary>
         <% if (imp.input && imp.input.description) { -%>
-        /// <param name="input"><%- imp.input.description %></param>
+        /// <param name="input"><%= imp.input.description %></param>
         <% } -%>
         <% if (imp.output && imp.output.description) { -%>
-        /// <returns><%- imp.output.description %></returns>
+        /// <returns><%= imp.output.description %></returns>
         <% } %>
     <% } %>
     public static <%- imp.output ? toCSharpType(imp.output) : "void" %> <%- toPascalCase(imp.name) %>(<%- imp.input ? `${toCSharpType(imp.input)} input` : "" %>)
