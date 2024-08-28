@@ -1,4 +1,4 @@
-namespace <%= project.name %>;
+namespace <%- project.name %>;
 using System;
 using Extism;
 
@@ -23,7 +23,7 @@ public class Program
 			/// <returns><%= ex.output.description %></returns>
 			<% } %>
 		<% } %>
-		public static <%= ex.output ? toCSharpType(ex.output) : "void" %> <%= toPascalCase(ex.name) %>(<%= ex.input ? `${toCSharpType(ex.input)} input` : "" %>)
+		public static <%- ex.output ? toCSharpType(ex.output) : "void" %> <%- toPascalCase(ex.name) %>(<%- ex.input ? `${toCSharpType(ex.input)} input` : "" %>)
 		{
 			<% if (featureFlags['stub-with-code-samples'] && codeSamples(ex, 'csharp').length > 0) { -%>
 				<%- codeSamples(ex, 'csharp')[0].source %>
