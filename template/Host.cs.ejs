@@ -1,10 +1,14 @@
 namespace <%- project.name %>;
+
+using Extism;
+
 using System;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Nodes;
-using Extism;
+using System.Buffers.Text;
+using System.Buffers;
 
 public class Host
 {
@@ -135,6 +139,9 @@ public class Host
         {
             <% Object.values(s.properties).forEach(p => { %>
             [JsonPropertyName("<%- p.name %>")]
+            <% if (p.type === 'buffer') { %>
+            [JsonConverter(typeof(Base64JsonConverter))]
+            <% } %>
             public <%- toCSharpType(p) %> <%- toPascalCase(p.name) %> { get; set; }
             <% }) %>
         }
@@ -152,6 +159,27 @@ public partial class PdkJsonContext : JsonSerializerContext
     {
         var options = new JsonSerializerOptions();
         options.Converters.Add(new JsonStringEnumConverter());
+        options.Converters.Add(new Base64JsonConverter());
+        
         return options;
+    }
+}
+
+public class Base64JsonConverter : JsonConverter<byte[]>
+{
+    public override byte[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.String)
+        {
+            throw new JsonException("Expected string value for Base64 encoded data.");
+        }
+
+        string base64String = reader.GetString();
+        return Convert.FromBase64String(base64String);
+    }
+
+    public override void Write(Utf8JsonWriter writer, byte[] value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(Convert.ToBase64String(value));
     }
 }
