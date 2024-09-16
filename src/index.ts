@@ -57,7 +57,7 @@ function toCSharpType(property: Property): string {
       if (property.format === "double") {
         return "Double";
       }
-      return "long";
+      return "Int64";
     case "integer":
       return "Int32";
     case "boolean":

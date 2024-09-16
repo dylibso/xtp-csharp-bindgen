@@ -62,7 +62,6 @@ imports:
       description: the raw byte values at key
   kv_write:
     description: kvwrite
-    contentType: application/json
     input:
       contentType: application/json
       "$ref": "#/components/schemas/WriteParams"
@@ -92,8 +91,6 @@ components:
       - inky
       - clyde
       description: A set of all the enemies of pac-man
-    AnonymousObject:
-      type: object
     ComplexObject:
       properties:
         ghost:
@@ -120,6 +117,6 @@ components:
           "$ref": "#/components/schemas/WriteParams"
           nullable: true
         anon:
-          "$ref": "#/components/schemas/AnonymousObject"
+          type: object
           nullable: true
       description: A complex json object

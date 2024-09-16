@@ -90,7 +90,7 @@ jobs:
           echo "Running xtp plugin init"
           xtp plugin init --schema-file schema.yaml --template ../template-bundle --path exampleplugin --name exampleplugin --feature stub-with-code-samples
           echo "Running xtp plugin build"
-          script -q -c "xtp plugin build --path exampleplugin" /dev/stdout
+          xtp plugin build --path exampleplugin
           echo "Running xtp plugin test"
           xtp plugin test exampleplugin/dist/plugin.wasm --with test.wasm --mock-host mock.wasm
 
