@@ -104,18 +104,17 @@ if (-not $env:WASI_SDK_PATH) {
     Write-Host "WASI_SDK_PATH environment variable is not set." -ForegroundColor Red
     Write-Host ""
     Write-Host "1. Download WASI SDK from https://github.com/WebAssembly/wasi-sdk/releases" -ForegroundColor Yellow
-    Write-Host "2. Extract to a directory (e.g., D:\tools\wasi_sdk)" -ForegroundColor Yellow
-    Write-Host "3. Set WASI_SDK_PATH environment variable:" -ForegroundColor Yellow
-    Write-Host "    [Environment]::SetEnvironmentVariable('WASI_SDK_PATH', 'D:\tools\wasi_sdk', 'User')" -ForegroundColor Yellow
+    Write-Host "2. Extract to a directory (e.g., /usr/local/wasi-sdk or D:\tools\wasi_sdk)" -ForegroundColor Yellow
+    Write-Host "3. Set WASI_SDK_PATH environment variable" -ForegroundColor Yellow
     Write-Host ""
 }
-elseif (-not (Test-Path "$env:WASI_SDK_PATH\bin\clang.exe")) {
+elseif (-not (Test-Path "$env:WASI_SDK_PATH/bin/clang$( $IsWindows ? '.exe' : '' )")) {
     $missingDeps = $true
     Write-Host "WASI SDK installation appears incomplete or incorrect." -ForegroundColor Red
-    Write-Host "   Could not find clang.exe in $env:WASI_SDK_PATH\bin" -ForegroundColor Red
+    Write-Host "   Could not find clang in $env:WASI_SDK_PATH/bin" -ForegroundColor Red
     Write-Host ""
     Write-Host "1. Download WASI SDK from https://github.com/WebAssembly/wasi-sdk/releases" -ForegroundColor Yellow
-    Write-Host "2. Extract to a directory (e.g., D:\tools\wasi_sdk)" -ForegroundColor Yellow
+    Write-Host "2. Extract to a directory (e.g., /usr/local/wasi-sdk or D:\tools\wasi_sdk)" -ForegroundColor Yellow
     Write-Host "3. Ensure WASI_SDK_PATH points to the correct directory" -ForegroundColor Yellow
     Write-Host ""
 }
