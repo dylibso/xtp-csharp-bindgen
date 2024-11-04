@@ -14,4 +14,4 @@ build = "dotnet publish -c Release && cp bin/Release/wasi-wasm/AppBundle/<%-proj
 format = "dotnet format && mv Plugin.csproj <%-project.name%>.csproj 2>nul"
 
 # xtp plugin init runs this script before running the format script
-prepare = "dotnet restore"
+prepare = "powershell ./prepare.ps1 || pwsh ./prepare.ps1 && dotnet restore"
