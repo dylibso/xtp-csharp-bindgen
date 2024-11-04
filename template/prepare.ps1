@@ -1,3 +1,8 @@
+$exe = ""
+if ($PSVersionTable.Platform -eq "Win32NT" -or ($PSVersionTable.PSEdition -eq "Desktop")) {
+    $exe = ".exe"
+}
+
 # Function to check if a command exists
 function Test-CommandExists {
     param ($Command)
@@ -108,10 +113,10 @@ if (-not $env:WASI_SDK_PATH) {
     Write-Host "3. Set WASI_SDK_PATH environment variable" -ForegroundColor Yellow
     Write-Host ""
 }
-elseif (-not (Test-Path "$env:WASI_SDK_PATH/bin/clang$( $IsWindows ? '.exe' : '' )")) {
+elseif (-not (Test-Path (Join-Path $env:WASI_SDK_PATH "bin\clang$exe"))) {
     $missingDeps = $true
     Write-Host "WASI SDK installation appears incomplete or incorrect." -ForegroundColor Red
-    Write-Host "   Could not find clang in $env:WASI_SDK_PATH/bin" -ForegroundColor Red
+    Write-Host "   Could not find clang$exe in $env:WASI_SDK_PATH/bin" -ForegroundColor Red
     Write-Host ""
     Write-Host "1. Download WASI SDK from https://github.com/WebAssembly/wasi-sdk/releases" -ForegroundColor Yellow
     Write-Host "2. Extract to a directory (e.g., /usr/local/wasi-sdk or D:\tools\wasi_sdk)" -ForegroundColor Yellow
