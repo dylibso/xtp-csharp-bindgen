@@ -77,15 +77,15 @@ public class Host
     private static extern <%- imp.output?.xtpType ? "ulong" : "void" %> <%- imp.name %>Impl(<%- imp.input ? "ulong input" : "" %>);
 
     <% if (hasComment(imp)) { %>
-        /// <summary>  <% -%>
-        <%- formatCommentBlock(imp.description, '///') %>
+        /// <summary> 
+        /// <%- formatCommentBlock(imp.description, '///') %>
         /// </summary>
-        <% if (hasComment(imp.input)) { -%>
+    <% } %>
+    <% if (hasComment(imp.input)) { -%>
         /// <param name="input"><%= formatCommentLine(imp.input.description) %></param>
-        <% } -%>
-        <% if (hasComment(imp.output)) { -%>
+    <% } -%>
+    <% if (hasComment(imp.output)) { -%>
         /// <returns><%= formatCommentLine(imp.output.description) %></returns>
-        <% } %>
     <% } %>
     public static <%- imp.output?.xtpType ? toCSharpTypeX(imp.output.xtpType) : "void" %> <%- csharpName(imp.name) %>(<%- imp.input ? `${toCSharpTypeX(imp.input.xtpType)} input` : "" %>)
     {

@@ -11,15 +11,15 @@ public class Program
 
 	<% schema.exports.forEach(ex => { %>
 		<% if (hasComment(ex)) { %>
-			/// <summary>  <% -%>
-			<%- formatCommentBlock(ex.description, '///') %>
+			/// <summary> 
+			/// <%- formatCommentBlock(ex.description, '///') %>
 			/// </summary>
-			<% if (hasComment(ex.input)) { -%>
+		<% } %>
+		<% if (hasComment(ex.input)) { -%>
 			/// <param name="input"><%= formatCommentLine(ex.input.description) %></param>
-			<% } -%>
-			<% if (hasComment(ex.output)) { -%>
+		<% } -%>
+		<% if (hasComment(ex.output)) { -%>
 			/// <returns><%= formatCommentLine(ex.output.description) %></returns>
-			<% } %>
 		<% } %>
 		public static <%- ex.output?.xtpType ? toCSharpTypeX(ex.output.xtpType) : "void" %> <%- csharpName(ex.name) %>(<%- ex.input?.xtpType ? `${toCSharpTypeX(ex.input.xtpType)} input` : "" %>)
 		{
