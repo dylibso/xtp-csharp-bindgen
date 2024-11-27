@@ -10,20 +10,18 @@ public class Program
     }
 
 	<% schema.exports.forEach(ex => { %>
-		<% if (needsDocumentation(ex)) { %>
-			/// <summary> <% -%>
-			<% ex.description.split('\n').filter(line => line.trim() !== "").forEach(line => { %>
-				/// <%= line.trim() -%>
-			<% }) %>
+		<% if (hasComment(ex)) { %>
+			/// <summary>  <% -%>
+			<%- formatCommentBlock(ex.description, '///') %>
 			/// </summary>
-			<% if (ex.input && ex.input.description) { -%>
-			/// <param name="input"><%= ex.input.description %></param>
+			<% if (hasComment(ex.input)) { -%>
+			/// <param name="input"><%= formatCommentLine(ex.input.description) %></param>
 			<% } -%>
-			<% if (ex.output && ex.output.description) { -%>
-			/// <returns><%= ex.output.description %></returns>
+			<% if (hasComment(ex.output)) { -%>
+			/// <returns><%= formatCommentLine(ex.output.description) %></returns>
 			<% } %>
 		<% } %>
-		public static <%- ex.output ? toCSharpType(ex.output) : "void" %> <%- toPascalCase(ex.name) %>(<%- ex.input ? `${toCSharpType(ex.input)} input` : "" %>)
+		public static <%- ex.output?.xtpType ? toCSharpTypeX(ex.output.xtpType) : "void" %> <%- csharpName(ex.name) %>(<%- ex.input?.xtpType ? `${toCSharpTypeX(ex.input.xtpType)} input` : "" %>)
 		{
 			<% if (featureFlags['stub-with-code-samples'] && codeSamples(ex, 'csharp').length > 0) { -%>
 				<%- codeSamples(ex, 'csharp')[0].source %>

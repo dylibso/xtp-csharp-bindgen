@@ -1,8 +1,18 @@
 import ejs from "ejs";
-import { getContext, helpers, Import, Export, Property, Schema, XtpSchema } from "@dylibso/xtp-bindgen";
+import { getContext, helpers, Import, Export, Property, Schema, XtpSchema, XtpNormalizedType, ArrayType, BufferType, ObjectType, EnumType, MapType } from "@dylibso/xtp-bindgen";
 
 function toPascalCase(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  const cap = s.charAt(0).toUpperCase();
+  if (s.charAt(0) === cap) {
+    return s;
+  }
+
+  const pub = cap + s.slice(1);
+  return pub;
+}
+
+function csharpName(s: string) {
+  return toPascalCase(s);
 }
 
 function needsDocumentation(x: Export | Import) {
@@ -13,90 +23,94 @@ function needsDocumentation(x: Export | Import) {
 }
 
 function serializableTypes(schema: XtpSchema): string[] {
-  const hash : Map<string, boolean> = new Map();
+  const hash: Map<string, boolean> = new Map();
 
   for (const s of Object.values(schema.schemas)) {
-    hash.set(toCSharpType({ $ref: s } as Property), true);
+    hash.set(toCSharpTypeX(s.xtpType), true);
   }
 
   for (const e of Object.values(schema.exports)) {
     if (e.input) {
-      hash.set(toCSharpType((e.input as any) as Property), true);
+      hash.set(toCSharpTypeX(e.input.xtpType), true);
     }
 
     if (e.output) {
-      hash.set(toCSharpType((e.output as any) as Property), true);
+      hash.set(toCSharpTypeX(e.output.xtpType), true);
     }
   }
 
   for (const i of Object.values(schema.imports)) {
     if (i.input) {
-      hash.set(toCSharpType((i.input as any) as Property), true);
+      hash.set(toCSharpTypeX(i.input.xtpType), true);
     }
 
     if (i.output) {
-      hash.set(toCSharpType((i.output as any) as Property), true);
+      hash.set(toCSharpTypeX(i.output.xtpType), true);
     }
   }
 
   return Array.from(hash.keys());
 }
 
-function toCSharpType(property: Property): string {
-  if (property.$ref) return property.$ref.name;
-  switch (property.type) {
+function toCSharpTypeX(type: XtpNormalizedType): string {
+  if (!type) {
+    return "void";
+  }
+  
+  switch (type.kind) {
     case "string":
-      if (property.format === "date-time") {
-        return "DateTime";
-      }
       return "String";
-    case "number":
-      if (property.format === "float") {
-        return "Single";
-      }
-      if (property.format === "double") {
-        return "Double";
-      }
-      return "Int64";
-    case "integer":
+    case "int32":
       return "Int32";
+    case "int64":
+      return "Int64";
+    case "float":
+      return "Single";
+    case "double":
+      return "Double";
     case "boolean":
-      return "Boolean";
-    case "object":
-      return "JsonNode";
-    case "array":
-      if (!property.items) return "JsonArray";
-      // TODO this is not quite right to force cast
-      return `${toCSharpType(property.items as Property)}[]`;
+      return "bool";
+    case "date-time":
+      return "DateTime";
+    case "byte":
+      return "byte";
+    case "array":      
+      const arrayType = type as ArrayType
+
+      // TODO: double check this
+      if (arrayType.elementType.kind === 'object') {
+        const objType = arrayType.elementType as ObjectType;
+        if (!objType.name) {
+          return "JsonArray";
+        }
+      }
+
+      return toCSharpTypeX(arrayType.elementType) + "[]";
     case "buffer":
       return "byte[]";
+    case "object":
+      const objType = type as ObjectType;
+      if (objType.properties.length === 0) {
+        return "JsonNode";
+      }
+
+      return csharpName(objType.name);
+    case "enum":
+      return csharpName((type as EnumType).name);
+    case "map":
+      const { keyType, valueType } =  type as MapType
+      return `Dictionary<${toCSharpTypeX(keyType)}, ${toCSharpTypeX(valueType)}>`;
     default:
-      throw new Error("Can't convert property to C# type: " + property.type + " of " + property.name);
+      throw new Error("Can't convert type to C# type: " + JSON.stringify(type));
   }
 }
 
-function needsTypeInfo(property: Property): boolean {
-  return true;
-  // if (property.$ref) return true;
+function typeInfo(type: XtpNormalizedType): string {
+ if (type.kind === 'array') {
+  return typeInfo((type as ArrayType).elementType) + 'Array';
+ }
 
-  // if (property.type === "array") {
-  //   return needsTypeInfo(property.items as Property);
-  // }
-
-  // return false;
-}
-
-function typeInfo(property: Property): string {
-  if (property.$ref) {
-    return toCSharpType(property);
-  }
-
-  if (property.type === "array") {
-    return typeInfo(property.items as Property) + "Array";
-  }
-
-  return toCSharpType(property);
-
+ return toCSharpTypeX(type);
 }
 
 function isEnum(schema: Schema): boolean {
@@ -109,13 +123,11 @@ export function render() {
   const ctx = {
     ...helpers,
     ...getContext(),
-    toCSharpType,
-    needsTypeInfo,
+    toCSharpTypeX,
     isEnum,
-    typeInfo,
     serializableTypes,
     needsDocumentation,
-    toPascalCase,
+    csharpName,
   };
 
   const output = ejs.render(tmpl, ctx, {
