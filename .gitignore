@@ -4,4 +4,5 @@ bundle.zip
 bundle
 tests/output
 myplugin
+bindgen-test-artifacts
 .vs
