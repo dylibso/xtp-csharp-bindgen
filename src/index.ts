@@ -1,18 +1,8 @@
 import ejs from "ejs";
-import { getContext, helpers, Import, Export, Property, Schema, XtpSchema, XtpNormalizedType, ArrayType, BufferType, ObjectType, EnumType, MapType } from "@dylibso/xtp-bindgen";
-
-function toPascalCase(s: string) {
-  const cap = s.charAt(0).toUpperCase();
-  if (s.charAt(0) === cap) {
-    return s;
-  }
-
-  const pub = cap + s.slice(1);
-  return pub;
-}
+import { getContext, helpers, Import, Export, Schema, XtpSchema, XtpNormalizedType, ArrayType, ObjectType, EnumType, MapType } from "@dylibso/xtp-bindgen";
 
 function csharpName(s: string) {
-  return toPascalCase(s);
+  return helpers.snakeToPascalCase(s);
 }
 
 function needsDocumentation(x: Export | Import) {
@@ -72,8 +62,6 @@ function toCSharpTypeX(type: XtpNormalizedType): string {
       return "bool";
     case "date-time":
       return "DateTime";
-    case "byte":
-      return "byte";
     case "array":      
       const arrayType = type as ArrayType
 
